@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-emerald-50: #f1f8fc;
+    --color-emerald-100: #e0f0f7;
+    --color-emerald-200: #c4e3ef;
+    --color-emerald-300: #98cbe0;
+    --color-emerald-400: #62afcf;
+    --color-emerald-500: #348fb7;
+    --color-emerald-600: #167ba5;
+    --color-emerald-700: #126586;
+    --color-emerald-800: #10536e;
+    --color-emerald-900: #0c4258;
+    --color-emerald-950: #082c3b;
+    --color-orange-50: #f1f8fc;
+    --color-orange-100: #e0f0f7;
+    --color-orange-200: #c4e3ef;
+    --color-orange-300: #98cbe0;
+    --color-orange-400: #62afcf;
+    --color-orange-500: #348fb7;
+    --color-orange-600: #167ba5;
+    --color-orange-700: #126586;
+    --color-orange-800: #10536e;
+    --color-orange-900: #0c4258;
+    --color-orange-950: #082c3b;
+}
+
+@keyframes logo-dance {
+    0%, 100% {
+        transform: translateY(0) rotate(-4deg);
+    }
+
+    25%, 75% {
+        transform: translateY(-9px) rotate(4deg);
+    }
+
+    50% {
+        transform: translateY(0) rotate(-4deg);
+    }
+}
+
+.loading-dance {
+    animation: logo-dance 900ms ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-dance {
+        animation: none;
+    }
+}
+
+.chat-ui {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.chat-hero {
+    background: linear-gradient(112deg, #105e7d 0%, #167ba5 52%, #258ebd 100%);
+}
+
+.chat-brand-text {
+    color: #167ba5;
+}
+
+.chat-brand-soft {
+    background-color: #e8f4fa;
+}
+
+.chat-brand-button {
+    background-color: #167ba5;
+}
+
+.chat-brand-button:hover {
+    background-color: #105f82;
+}
+
+.chat-own-bubble {
+    background-color: #2187b5;
+    color: white;
+}
+
+.chat-own-time {
+    color: #d9f2ff;
+}
+
+.landing-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: linear-gradient(112deg, #105e7d 0%, #167ba5 52%, #258ebd 100%);
+}
+
+.landing-hero::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image: radial-gradient(circle, rgb(255 255 255 / 28%) 1.5px, transparent 1.8px);
+    background-position: center;
+    background-size: 13px 13px;
+    mask-image: radial-gradient(ellipse at 68% 52%, #000 0%, transparent 68%);
+    content: '';
+    pointer-events: none;
+}
+
+.landing-hero::after {
+    position: absolute;
+    z-index: 0;
+    top: 8%;
+    right: -14rem;
+    width: min(62vw, 760px);
+    aspect-ratio: 1;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 36px rgb(255 255 255 / 4%), 0 0 0 78px rgb(255 255 255 / 3%);
+    content: '';
+    pointer-events: none;
+}
