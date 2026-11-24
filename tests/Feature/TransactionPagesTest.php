@@ -128,6 +128,39 @@ class TransactionPagesTest extends TestCase
         $this->assertSame('processing', $order->fresh()->status);
     }
 
+    public function test_buyer_can_trace_the_shipment_and_see_its_tracking_number(): void
+    {
+        $buyer = User::factory()->create(['role' => 'buyer']);
+        $supplier = User::factory()->create(['role' => 'supplier']);
+        $order = Order::create([
+            'buyer_id' => $buyer->id,
+            'supplier_id' => $supplier->id,
+            'status' => 'processing',
+            'payment_status' => 'paid',
+            'subtotal' => 100,
+            'shipping_fee' => 0,
+            'discount' => 0,
+            'total' => 100,
+        ]);
+
+        $this->actingAs($supplier)
+            ->patch(route('supplier.distribution.update', $order), [
+                'delivery_action' => 'ship',
+                'courier_name' => 'Kurir Segar',
+                'tracking_number' => 'RESI-12345',
+            ])
+            ->assertRedirect(route('supplier.distribution'));
+
+        $this->assertNotNull($order->fresh()->shipped_at);
+        $this->actingAs($buyer->refresh())
+            ->get(route('transactions.show', $order))
+            ->assertOk()
+            ->assertSee('Pelacakan distribusi')
+            ->assertSee('Kurir Segar')
+            ->assertSee('RESI-12345')
+            ->assertSee('Dalam pengiriman');
+    }
+
     public function test_cancelling_order_restores_product_stock(): void
     {
         $buyer = User::factory()->create(['role' => 'buyer']);

@@ -19,7 +19,7 @@
             data-old-city="{{ old('city') }}"
             data-old-district="{{ old('district') }}"
             data-old-village="{{ old('village') }}"
-            data-initial-step="{{ $errors->hasAny(['name', 'role', 'sppg_id', 'nib_number', 'nib_document']) ? 1 : ($errors->hasAny(['contact_person', 'phone', 'email']) ? 2 : ($errors->hasAny(['address', 'postal_code']) ? 3 : ($errors->hasAny(['province', 'city', 'district', 'village']) ? 4 : ($errors->hasAny(['password', 'password_confirmation', 'captcha_answer']) ? 5 : 1)))) }}"
+            data-initial-step="{{ $errors->hasAny(['name', 'role', 'sppg_id', 'nib_number', 'nib_document']) ? 1 : ($errors->hasAny(['contact_person', 'phone', 'email']) ? 2 : ($errors->hasAny(['address', 'postal_code']) ? 3 : ($errors->hasAny(['province', 'city', 'district', 'village']) ? 4 : ($errors->hasAny(['password', 'password_confirmation', 'captcha_answer', 'cf-turnstile-response']) ? 5 : 1)))) }}"
             novalidate
             class="mt-5 space-y-4 sm:mt-6"
         >
@@ -151,9 +151,7 @@
                     @error('password_confirmation')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">
-                    <label for="captcha_answer" class="mb-1.5 block text-sm font-semibold text-slate-700">Kode CAPTCHA: {{ $captchaQuestion }}</label>
-                    <input id="captcha_answer" name="captcha_answer" type="number" inputmode="numeric" min="20" max="198" autocomplete="off" class="min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100 sm:px-4" required aria-invalid="{{ $errors->has('captcha_answer') ? 'true' : 'false' }}">
-                    @error('captcha_answer')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                    @include('auth.partials.captcha')
                 </div>
             </section>
 

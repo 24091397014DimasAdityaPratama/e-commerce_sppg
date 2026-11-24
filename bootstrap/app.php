@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt.auth' => App\Http\Middleware\JwtAuthMiddleware::class,
             'role' => App\Http\Middleware\RoleMiddleware::class,
+            'active.account' => App\Http\Middleware\EnsureActiveAccount::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -110,6 +110,7 @@
                     <div class="p-3 sm:p-4">
                         <p class="text-[11px] font-semibold text-[#167ba5]">{{ $product->category->name ?? 'Produk' }}</p>
                         <a href="{{ route('products.show', $product) }}" class="mt-1 block line-clamp-2 min-h-10 text-sm font-bold text-slate-800 hover:text-[#126586]">{{ $product->name }}</a>
+                        <x-product-rating :product="$product" />
                         <p class="mt-2 text-base font-black text-[#126586]">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         <p class="text-xs text-slate-500">per {{ (float) $product->unit_quantity }} {{ $product->unit }}</p>
                     </div>

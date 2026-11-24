@@ -17,7 +17,11 @@
         @elseif ($user->isBuyer())
             <a href="{{ route('transactions.index') }}" class="rounded-xl bg-[#167ba5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#105f82]">Transaksi ({{ $summary['transactions'] ?? 0 }})</a>
         @else
-            <a href="{{ route('admin.suppliers.index') }}" class="rounded-xl bg-[#167ba5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#105f82]">Verifikasi pemasok ({{ $summary['pendingSuppliers'] ?? 0 }})</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.suppliers.index') }}" class="rounded-xl bg-[#167ba5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#105f82]">Verifikasi pemasok ({{ $summary['pendingSuppliers'] ?? 0 }})</a>
+                <a href="{{ route('admin.products.index') }}" class="rounded-xl border border-sky-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#126586]">Moderasi produk</a>
+                <a href="{{ route('admin.users.index') }}" class="rounded-xl border border-sky-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#126586]">Kelola akun</a>
+            </div>
         @endif
     </div>
 

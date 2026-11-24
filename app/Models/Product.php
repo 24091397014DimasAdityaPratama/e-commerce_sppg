@@ -80,4 +80,9 @@ class Product extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function visibleReviews()
+    {
+        return $this->reviews()->where('is_visible', true);
+    }
 }

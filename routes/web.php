@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminSupplierVerificationController;
+use App\Http\Controllers\AdminModerationController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SupplierCenterController;
 use App\Http\Controllers\SupplierPaymentSettingsController;
@@ -31,7 +33,7 @@ Route::get('/regions/regencies/{province}', [RegionController::class, 'regencies
 Route::get('/regions/districts/{regency}', [RegionController::class, 'districts'])->where('regency', '[0-9]{2}\.[0-9]{2}')->name('regions.districts');
 Route::get('/regions/villages/{district}', [RegionController::class, 'villages'])->where('district', '[0-9]{2}\.[0-9]{2}\.[0-9]{2}')->name('regions.villages');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'active.account'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
@@ -74,11 +76,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions/{order}/qris', [TransactionController::class, 'createQris'])->name('transactions.qris.create');
     Route::get('/transactions/{order}/qris-image', [TransactionController::class, 'qrisImage'])->name('transactions.qris.image');
     Route::post('/transactions/{order}/payment', [TransactionController::class, 'submitPayment'])->name('transactions.payment.submit');
+    Route::get('/transactions/{order}/delivery-proof', [TransactionController::class, 'deliveryProof'])->name('transactions.delivery-proof');
     Route::patch('/transactions/{order}/payment', [TransactionController::class, 'verifyPayment'])->name('transactions.payment.verify');
     Route::patch('/transactions/{order}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status.update');
+    Route::post('/products/{product:slug}/reviews', [ReviewController::class, 'store'])->name('products.reviews.store');
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'active.account', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products', [AdminModerationController::class, 'products'])->name('products.index');
+    Route::patch('/products/{product}/visibility', [AdminModerationController::class, 'updateProductVisibility'])->name('products.visibility.update');
+    Route::delete('/products/{product}', [AdminModerationController::class, 'destroyProduct'])->name('products.destroy');
+    Route::get('/users', [AdminModerationController::class, 'users'])->name('users.index');
+    Route::patch('/users/{user}/status', [AdminModerationController::class, 'updateUserStatus'])->name('users.status.update');
     Route::get('/suppliers', [AdminSupplierVerificationController::class, 'index'])->name('suppliers.index');
     Route::patch('/suppliers/{supplier}/verification', [AdminSupplierVerificationController::class, 'update'])->name('suppliers.verification.update');
     Route::get('/suppliers/{supplier}/nib-document', [AdminSupplierVerificationController::class, 'nibDocument'])->name('suppliers.nib-document');

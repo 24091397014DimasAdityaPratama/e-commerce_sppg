@@ -27,6 +27,8 @@ class Order extends Model
         'courier_name',
         'tracking_number',
         'delivery_proof_path',
+        'shipped_at',
+        'delivered_at',
         'subtotal',
         'shipping_fee',
         'discount',
@@ -41,6 +43,8 @@ class Order extends Model
         'total' => 'decimal:2',
         'payment_submitted_at' => 'datetime',
         'payment_verified_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function buyer()

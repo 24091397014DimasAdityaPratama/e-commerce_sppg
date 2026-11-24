@@ -34,6 +34,7 @@
                 <div class="p-3 sm:p-4">
                     <p class="text-xs font-medium text-slate-500">{{ $product->category->name ?? 'Produk' }}</p>
                     <a href="{{ route('products.show', $product) }}" class="mt-1 line-clamp-2 min-h-10 text-sm font-semibold text-slate-800 hover:text-orange-700">{{ $product->name }}</a>
+                    <x-product-rating :product="$product" />
                     <p class="mt-2 text-base font-black text-orange-700">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                     <p class="text-xs text-slate-500">per {{ (float) $product->unit_quantity }} {{ $product->unit }} · stok {{ $product->stock }}</p>
                     <p class="mt-2 truncate text-xs text-slate-500">{{ $product->supplier->supplierProfile->city ?? 'Indonesia' }}</p>

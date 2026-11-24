@@ -57,6 +57,7 @@
                     <div class="p-3">
                         <span class="rounded bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase text-orange-700">Unggulan</span>
                         <a href="{{ route('products.show', $product) }}" class="mt-2 block line-clamp-2 min-h-10 text-sm font-semibold text-slate-800 hover:text-orange-700">{{ $product->name }}</a>
+                        <x-product-rating :product="$product" />
                         <p class="mt-2 text-base font-black text-orange-700">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         <p class="text-xs text-slate-500">per {{ (float) $product->unit_quantity }} {{ $product->unit }}</p>
                         @if ($product->supplier?->supplierProfile?->city)
@@ -89,6 +90,7 @@
                     <img src="{{ $product->image_url ?? 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80' }}" alt="{{ $product->name }}" class="h-16 w-16 rounded-lg bg-slate-100 object-cover">
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-bold text-slate-800">{{ $product->name }}</p>
+                        <x-product-rating :product="$product" />
                         <p class="mt-1 text-xs text-slate-500">{{ $product->category->name ?? 'Produk' }}</p>
                         <p class="mt-1 text-sm font-black text-orange-700">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                     </div>

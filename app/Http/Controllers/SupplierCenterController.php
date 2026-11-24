@@ -207,6 +207,8 @@ class SupplierCenterController extends Controller
                     'courier_name' => $validated['courier_name'] ?? $lockedOrder->courier_name,
                     'tracking_number' => $validated['tracking_number'] ?? $lockedOrder->tracking_number,
                     'delivery_proof_path' => $proofPath ?? $lockedOrder->delivery_proof_path,
+                    'shipped_at' => $validated['delivery_action'] === 'ship' ? now() : $lockedOrder->shipped_at,
+                    'delivered_at' => $validated['delivery_action'] === 'deliver' ? now() : $lockedOrder->delivered_at,
                     'status' => $validated['delivery_action'] === 'deliver' ? 'completed' : $lockedOrder->status,
                 ]);
 

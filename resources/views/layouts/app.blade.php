@@ -171,5 +171,6 @@
             <p class="mt-5 text-sm font-bold tracking-wide text-[#126586]">Loading, mohon tunggu...</p>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>

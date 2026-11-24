@@ -1,6 +1,6 @@
 # SPPG MART
 
-SPPG MART is an Indonesian food-procurement marketplace connecting SPPG kitchens with suppliers. The Laravel application includes a responsive web storefront, buyer/supplier accounts, order and stock management, supplier verification, private NIB/payment documents, chat, and a versioned JSON API.
+SPPG MART is an Indonesian food-procurement marketplace connecting SPPG kitchens with suppliers. The Laravel application includes a responsive storefront, buyer-verified product ratings, delivery tracking, order and stock management, supplier verification, admin product moderation and account blocking, private NIB/payment documents, chat, and a versioned JSON API.
 
 ## Requirements
 
@@ -24,21 +24,20 @@ php artisan serve
 
 In another terminal, run `npm run dev` while developing frontend assets. Configure database connection values in `.env` before migrating if you are not using SQLite.
 
-The local/testing seeder creates demo accounts:
+The local/testing seeder creates one local administrator account:
 
 | Role | Email | Password |
 | --- | --- | --- |
 | Administrator | `admin@sppgmart.test` | `password123` |
-| SPPG | `buyer@sppgmart.test` | `password123` |
-| Supplier | `supplier@sppgmart.test` | `password123` |
 
-Demo accounts and sample products are deliberately not seeded outside `local` and `testing`. Change demo passwords before using a local database with real data.
+Sample buyers, suppliers, and products are not seeded, so the catalog starts clean. Categories are seeded as a starting taxonomy. Demo accounts are deliberately not seeded outside `local` and `testing`; change the local administrator password before using the database with real data.
 
 ## Configuration
 
 - Set `APP_ENV=production`, `APP_DEBUG=false`, a strong `APP_KEY`, and the correct `APP_URL` for deployment.
 - `JWT_SECRET` is optional; when empty, the API signs tokens with `APP_KEY`. Keep both secrets private and stable.
 - Configure `MIDTRANS_SERVER_KEY` and `MIDTRANS_IS_PRODUCTION` to enable dynamic QRIS payments.
+- Cloudflare Turnstile is optional for login and registration. Set both `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` to enable it; leave both empty to use the built-in arithmetic CAPTCHA during local development.
 - Password reset email uses Laravel's configured mailer. Set a production mail transport in `.env`.
 - Region selection uses the public `wilayah.id` service. Responses are cached by the application.
 - Private NIB, payment-proof, and delivery-proof files use the local private disk. Public product images and supplier logos use the public disk; run `php artisan storage:link` to serve those public uploads.

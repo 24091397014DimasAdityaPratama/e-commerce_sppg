@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\StockMovement;
 use App\Services\MidtransGateway;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -44,9 +45,16 @@ class TransactionController extends Controller
         );
 
         $order->load(['buyer', 'supplier.supplierProfile', 'items.product']);
+        $reviewedProductIds = $user->isBuyer()
+            ? Review::query()
+                ->where('user_id', $user->id)
+                ->whereIn('product_id', $order->items->pluck('product_id'))
+                ->pluck('product_id')
+                ->all()
+            : [];
         $midtransEnabled = app(MidtransGateway::class)->isConfigured();
 
-        return view('transactions.show', compact('order', 'user', 'midtransEnabled'));
+        return view('transactions.show', compact('order', 'user', 'midtransEnabled', 'reviewedProductIds'));
     }
 
     public function invoice(Request $request, Order $order)
@@ -87,6 +95,18 @@ class TransactionController extends Controller
         return Storage::disk('local')->download(
             $order->payment_proof_path,
             'bukti-pembayaran-'.$order->id.'.'.pathinfo($order->payment_proof_path, PATHINFO_EXTENSION)
+        );
+    }
+
+    public function deliveryProof(Request $request, Order $order)
+    {
+        abort_unless($request->user()->isBuyer() && $order->buyer_id === $request->user()->id, 403);
+        abort_unless($order->delivery_proof_path, 404);
+        abort_unless(Storage::disk('local')->exists($order->delivery_proof_path), 404);
+
+        return Storage::disk('local')->download(
+            $order->delivery_proof_path,
+            'bukti-pengiriman-'.$order->id.'.'.pathinfo($order->delivery_proof_path, PATHINFO_EXTENSION)
         );
     }
 

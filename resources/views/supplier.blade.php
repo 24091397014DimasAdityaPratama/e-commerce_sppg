@@ -44,6 +44,7 @@
             @foreach ($supplier->products as $product)
                 <article class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                     <h3 class="text-xl font-bold text-slate-900">{{ $product->name }}</h3>
+                    <x-product-rating :product="$product" />
                     <p class="mt-2 text-sm text-slate-600">{{ Str::limit($product->description, 100) }}</p>
                     <div class="mt-4 flex items-center justify-between">
                         <div class="text-lg font-black text-emerald-700">Rp {{ number_format($product->price, 0, ',', '.') }}</div>

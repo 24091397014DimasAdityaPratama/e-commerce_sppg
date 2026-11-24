@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\StockMovement;
 use App\Models\SupplierProfile;
 use App\Models\User;
@@ -25,11 +27,15 @@ class WebController extends Controller
     {
         $featuredProducts = Product::with(['category', 'supplier.supplierProfile'])
             ->availableInMarketplace()
+            ->withAvg('visibleReviews', 'rating')
+            ->withCount('visibleReviews')
             ->where('is_featured', true)
             ->take(6)
             ->get();
         $latestProducts = Product::with(['category', 'supplier.supplierProfile'])
             ->availableInMarketplace()
+            ->withAvg('visibleReviews', 'rating')
+            ->withCount('visibleReviews')
             ->orderByDesc('created_at')
             ->take(6)
             ->get();
@@ -46,6 +52,8 @@ class WebController extends Controller
     {
         $products = Product::with(['category', 'supplier.supplierProfile'])
             ->availableInMarketplace()
+            ->withAvg('visibleReviews', 'rating')
+            ->withCount('visibleReviews')
             ->when($request->category, fn ($query, $value) => $query->where('category_id', $value))
             ->when($request->search, fn ($query, $value) => $query->where('name', 'like', "%{$value}%"))
             ->orderByDesc('is_featured')
@@ -57,12 +65,27 @@ class WebController extends Controller
         return view('catalog', compact('products', 'categories'));
     }
 
-    public function product(Product $product)
+    public function product(Request $request, Product $product)
     {
-        $product->load(['category', 'supplier.supplierProfile']);
+        $product->load(['category', 'supplier.supplierProfile', 'visibleReviews.user']);
+        $product->loadAvg('visibleReviews', 'rating');
+        $product->loadCount('visibleReviews');
         abort_unless($product->isAvailableInMarketplace(), 404);
 
-        return view('product', compact('product'));
+        $buyer = $request->user();
+        $existingReview = $buyer?->isBuyer()
+            ? $product->reviews()->where('user_id', $buyer->id)->first()
+            : null;
+        $canReview = $buyer?->isBuyer()
+            && ! $existingReview
+            && Order::query()
+                ->where('buyer_id', $buyer->id)
+                ->where('status', 'completed')
+                ->where('delivery_status', 'delivered')
+                ->whereHas('items', fn ($query) => $query->where('product_id', $product->id))
+                ->exists();
+
+        return view('product', compact('product', 'canReview', 'existingReview'));
     }
 
     public function supplier(User $supplier)
@@ -76,7 +99,8 @@ class WebController extends Controller
         );
         $supplier->setRelation(
             'products',
-            $supplier->products()->availableInMarketplace()->with('category')->latest()->get()
+            $supplier->products()->availableInMarketplace()->with('category')
+                ->withAvg('visibleReviews', 'rating')->withCount('visibleReviews')->latest()->get()
         );
 
         return view('supplier', compact('supplier'));
@@ -84,20 +108,16 @@ class WebController extends Controller
 
     public function login(Request $request)
     {
-        $captchaQuestion = $this->newCaptchaQuestion($request);
-
-        return view('auth.login', compact('captchaQuestion'));
+        return view('auth.login', $this->captchaViewData($request));
     }
 
     public function authenticate(Request $request)
     {
-        $captchaAnswer = $request->session()->pull('web_captcha_answer');
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'captcha_answer' => $this->captchaAnswerRule($captchaAnswer),
         ]);
-        unset($credentials['captcha_answer']);
+        $this->validateCaptcha($request);
 
         if (Auth::attempt([...$credentials, 'status' => 'active'], $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -169,14 +189,11 @@ class WebController extends Controller
 
     public function register(Request $request)
     {
-        $captchaQuestion = $this->newCaptchaQuestion($request);
-
-        return view('auth.register', compact('captchaQuestion'));
+        return view('auth.register', $this->captchaViewData($request));
     }
 
     public function storeRegistration(Request $request)
     {
-        $captchaAnswer = $request->session()->pull('web_captcha_answer');
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')],
@@ -193,8 +210,8 @@ class WebController extends Controller
             'sppg_id' => ['required_if:role,buyer', 'nullable', 'string', 'max:50', Rule::unique('users', 'sppg_id')],
             'nib_number' => ['required_if:role,supplier', 'nullable', 'digits:13', Rule::unique('supplier_profiles', 'nib_number')],
             'nib_document' => ['required_if:role,supplier', 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-            'captcha_answer' => $this->captchaAnswerRule($captchaAnswer),
         ]);
+        $this->validateCaptcha($request);
 
         $nibDocumentPath = null;
         if ($data['role'] === 'supplier') {
@@ -252,6 +269,73 @@ class WebController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route($user->isBuyer() ? 'home' : 'dashboard');
+    }
+
+    private function captchaViewData(Request $request): array
+    {
+        $siteKey = config('services.turnstile.site_key');
+        $secretKey = config('services.turnstile.secret_key');
+        if ((bool) $siteKey !== (bool) $secretKey) {
+            throw new \RuntimeException('Cloudflare Turnstile must have both site and secret keys configured.');
+        }
+        if (! $siteKey && app()->environment('production')) {
+            throw new \RuntimeException('Cloudflare Turnstile keys are required in production.');
+        }
+
+        return [
+            'turnstileSiteKey' => $siteKey,
+            'captchaQuestion' => $siteKey ? null : $this->newCaptchaQuestion($request),
+        ];
+    }
+
+    private function validateCaptcha(Request $request): void
+    {
+        $siteKey = config('services.turnstile.site_key');
+        $secretKey = config('services.turnstile.secret_key');
+
+        if (! $siteKey || ! $secretKey) {
+            if (app()->environment('production')) {
+                throw new \RuntimeException('Cloudflare Turnstile keys are required in production.');
+            }
+
+            $expected = $request->session()->pull('web_captcha_answer');
+            $request->validate([
+                'captcha_answer' => $this->captchaAnswerRule($expected),
+            ]);
+
+            return;
+        }
+
+        $token = $request->input('cf-turnstile-response');
+        if (! is_string($token) || $token === '') {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cf-turnstile-response' => 'Selesaikan verifikasi CAPTCHA terlebih dahulu.',
+            ]);
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::asForm()
+                ->timeout(5)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $secretKey,
+                    'response' => $token,
+                    'remoteip' => $request->ip(),
+                ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $exception) {
+            \Illuminate\Support\Facades\Log::warning('Cloudflare Turnstile verification is unavailable.', [
+                'exception' => $exception::class,
+            ]);
+
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cf-turnstile-response' => 'Verifikasi CAPTCHA gagal dihubungi. Silakan coba lagi.',
+            ]);
+        }
+
+        if (! $response->successful() || ! $response->json('success')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cf-turnstile-response' => 'Verifikasi CAPTCHA tidak valid. Silakan coba lagi.',
+            ]);
+        }
     }
 
     private function newCaptchaQuestion(Request $request): string
